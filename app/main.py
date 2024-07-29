@@ -1,3 +1,5 @@
+import os
+
 import dotenv
 
 dotenv.load_dotenv()
@@ -14,4 +16,4 @@ app.include_router(users.router)
 
 if __name__ == "__main__":
     create_db_and_tables()
-    uvicorn.run(app, host="localhost", port=8002)
+    uvicorn.run(app, host=os.getenv("APP_URL"), port=int(os.getenv("APP_PORT")))
