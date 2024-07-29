@@ -1,4 +1,3 @@
-
 from pydantic import BaseModel, EmailStr, HttpUrl
 from sqlmodel import Field, SQLModel
 
