@@ -1,33 +1,9 @@
-import json
 from http import HTTPStatus
 
 import pytest
 import requests
 from app.models.User import User
-
-
-@pytest.fixture(scope="module")
-def fill_test_data(app_url):
-    with open("users.json") as f:
-        test_data_users = json.load(f)
-    api_users = []
-    for user in test_data_users:
-        response = requests.post(f"{app_url}/api/users/", json=user)
-        api_users.append(response.json())
-
-    user_ids = [user["id"] for user in api_users]
-
-    yield user_ids
-
-    for user_id in user_ids:
-        requests.delete(f"{app_url}/api/users/{user_id}")
-
-
-@pytest.fixture
-def users(app_url):
-    response = requests.get(f"{app_url}/api/users/")
-    assert response.status_code == HTTPStatus.OK
-    return response.json()
+from tests.conftest import fill_test_data, users
 
 
 @pytest.mark.usefixtures("fill_test_data")
@@ -64,3 +40,40 @@ def test_user_nonexistent_values(app_url, user_id):
 def test_user_invalid_values(app_url, user_id):
     response = requests.get(f"{app_url}/api/users/{user_id}")
     assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+
+
+def test_create_user(app_url, user):
+    body = {"email": user.email, "first_name": user.first_name, "last_name": user.last_name, "avatar": user.avatar}
+    response = requests.post(f"{app_url}/api/users/", json=body)
+    assert response.status_code == HTTPStatus.CREATED
+    assert response.json()["email"] == user.email
+    assert response.json()["first_name"] == user.first_name
+    assert response.json()["last_name"] == user.last_name
+    assert response.json()["avatar"] == user.avatar
+
+
+def test_delete_user(app_url, create_user):
+    user_id = create_user
+    response = requests.delete(f"{app_url}/api/users/{user_id}")
+    assert response.status_code == HTTPStatus.OK
+    assert response.json()["message"] == "User deleted"
+    response = requests.get(f"{app_url}/api/users/{user_id}")
+    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert response.json()["detail"] == "User not found"
+
+
+def test_update_user(app_url, create_delete_user):
+    user_id = create_delete_user["id"]
+    user_email = create_delete_user["email"]
+    user_first_name = create_delete_user["first_name"]
+    user_last_name = create_delete_user["last_name"]
+    user_avatar = create_delete_user["avatar"]
+    body = {"email": "some@mew.val", "first_name": "some_mew_first_name_val", "last_name": "some_mew_last_name_val",
+            "avatar": "http://some_mew_avatar_name_val.html"}
+    response = requests.patch(f"{app_url}/api/users/{user_id}", json=body)
+    assert response.status_code == HTTPStatus.OK
+    assert response.json()["email"] != user_email
+    assert response.json()["first_name"] != user_first_name
+    assert response.json()["last_name"] != user_last_name
+    assert response.json()["avatar"] != user_avatar
+    assert response.json()["id"] == user_id
