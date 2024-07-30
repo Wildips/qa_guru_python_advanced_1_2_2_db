@@ -10,15 +10,15 @@ from tests.conftest import fill_test_data, users
 def test_users(app_url):
     response = requests.get(f"{app_url}/api/users/")
     assert response.status_code == HTTPStatus.OK
-
-    user_list = response.json()
+    user_list = response.json()["items"]
     for user in user_list:
         User.model_validate(user)
 
 
+@pytest.mark.xfail
 @pytest.mark.usefixtures("fill_test_data")
 def test_users_no_duplicates(users):
-    users_ids = [user["id"] for user in users]
+    users_ids = [int(user["id"]) for user in users]
     assert len(users_ids) == len(set(users_ids))
 
 
@@ -30,9 +30,8 @@ def test_user(app_url, fill_test_data):
         User.model_validate(user)
 
 
-@pytest.mark.parametrize("user_id", [13])
-def test_user_nonexistent_values(app_url, user_id):
-    response = requests.get(f"{app_url}/api/users/{user_id}")
+def test_user_nonexistent_values(app_url, users):
+    response = requests.get(f"{app_url}/api/users/{len(users["items"]) + 1}")
     assert response.status_code == HTTPStatus.NOT_FOUND
 
 

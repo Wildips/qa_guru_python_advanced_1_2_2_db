@@ -10,6 +10,10 @@ def create_db_and_tables():
     SQLModel.metadata.create_all(engine)
 
 
+def clean_up_and_tables():
+    SQLModel.metadata.drop_all(engine)
+
+
 def check_availability() -> bool:
     try:
         with Session(engine) as session:
