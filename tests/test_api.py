@@ -49,6 +49,15 @@ def test_create_user(app_url, user):
     assert response.json()["first_name"] == user.first_name
     assert response.json()["last_name"] == user.last_name
     assert response.json()["avatar"] == user.avatar
+    user_id = int(response.json()["id"])
+    assert user_id > 0
+    response = requests.get(f"{app_url}/api/users/{user_id}")
+    assert response.status_code == HTTPStatus.OK
+    assert response.json()["email"] == user.email
+    assert response.json()["first_name"] == user.first_name
+    assert response.json()["last_name"] == user.last_name
+    assert response.json()["avatar"] == user.avatar
+    assert response.json()["id"] == user_id
 
 
 def test_delete_user(app_url, create_user):
@@ -76,3 +85,27 @@ def test_update_user(app_url, create_delete_user):
     assert response.json()["last_name"] != user_last_name
     assert response.json()["avatar"] != user_avatar
     assert response.json()["id"] == user_id
+
+
+def test_update_user_with_nonexistent_id(app_url, users, user):
+    body = {"email": user.email, "first_name": user.first_name, "last_name": user.last_name, "avatar": user.avatar}
+    response = requests.patch(f"{app_url}/api/users/{len(users["items"]) + 1}", json=body)
+    assert response.status_code == HTTPStatus.NOT_FOUND
+
+
+@pytest.mark.parametrize("user_id", [-1, 0, "fafaf"])
+def test_update_user_with_invalid_id(app_url, user_id, user):
+    body = {"email": user.email, "first_name": user.first_name, "last_name": user.last_name, "avatar": user.avatar}
+    response = requests.patch(f"{app_url}/api/users/{user_id}", json=body)
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+
+
+def test_delete_user_with_nonexistent_id(app_url, users):
+    response = requests.delete(f"{app_url}/api/users/{len(users["items"]) + 1}")
+    assert response.status_code == HTTPStatus.NOT_FOUND
+
+
+@pytest.mark.parametrize("user_id", [-1, 0, "fafaf"])
+def test_delete_user_with_invalid_id(app_url, user_id):
+    response = requests.delete(f"{app_url}/api/users/{user_id}")
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
