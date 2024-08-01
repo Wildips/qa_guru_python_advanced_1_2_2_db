@@ -1,14 +1,14 @@
-import os
-
 import dotenv
-from fastapi_pagination import add_pagination
 
 dotenv.load_dotenv()
 
+import os
 import uvicorn
+
+from fastapi_pagination import add_pagination
 from fastapi import FastAPI
 
-from routers import status, users
+from app.routers import status, users
 from app.database.engine import create_db_and_tables, clean_up_and_tables
 
 app = FastAPI(debug=True)
