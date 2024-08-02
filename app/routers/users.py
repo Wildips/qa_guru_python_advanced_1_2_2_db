@@ -1,10 +1,13 @@
 from http import HTTPStatus
-from typing import Iterable
 
 from fastapi import APIRouter, HTTPException
+from fastapi_pagination import paginate, Page
+from fastapi_pagination.utils import disable_installed_extensions_check
 
 from app.database import users
 from app.models.User import User, UserCreate, UserUpdate
+
+disable_installed_extensions_check()
 
 router = APIRouter(prefix="/api/users")
 
@@ -14,19 +17,18 @@ def get_user(user_id: int) -> User:
     if user_id < 1:
         raise HTTPException(status_code=HTTPStatus.UNPROCESSABLE_ENTITY, detail="Invalid user id")
     user = users.get_user(user_id)
-
     if not user:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="User not found")
     return user
 
 
-@router.get("/", status_code=HTTPStatus.OK)
-def get_users() -> Iterable[User]:
-    return users.get_users()
+@router.get("/", status_code=HTTPStatus.OK, response_model=Page[User])
+async def get_users() -> Page[User]:
+    return paginate(users.get_users())
 
 
 @router.post("/", status_code=HTTPStatus.CREATED)
-def create_user(user: User) -> User:
+async def create_user(user: User) -> User:
     UserCreate.model_validate(user.model_dump())
     return users.create_user(user)
 
@@ -43,5 +45,8 @@ def update_user(user_id: int, user: User) -> User:
 def delete_user(user_id: int):
     if user_id < 1:
         raise HTTPException(status_code=HTTPStatus.UNPROCESSABLE_ENTITY, detail="Invalid user id")
+    user = users.get_user(user_id)
+    if not user:
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="User not found")
     users.delete_user(user_id)
     return {"message": "User deleted"}
