@@ -3,7 +3,7 @@ from http import HTTPStatus
 import pytest
 import requests
 
-from tests.utils import pages_count
+from service_tests.utils.utils import pages_count
 
 
 def test_users_pagination_page(app_url, users):

@@ -4,7 +4,7 @@ import faker
 import pytest
 import requests
 from app.models.User import User
-from tests.conftest import fill_test_data, users
+from service_tests.tests.conftest import fill_test_data, users
 
 fake = faker.Faker()
 
