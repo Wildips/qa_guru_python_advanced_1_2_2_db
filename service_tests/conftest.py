@@ -1,7 +1,7 @@
 import pytest
 import logging
 
-pytest_plugins = ('fixture_sessions',)
+pytest_plugins = ["fixture_sessions"]
 
 
 def pytest_addoption(parser):

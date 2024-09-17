@@ -1,9 +1,9 @@
 class Server:
     def __init__(self, env):
         self.reqres = {
-            "dev": "",
+            "dev": "http://127.0.0.1:8002",
             "beta": "",
-            "rc": "http://127.0.0.1:8002",
+            "rc": "",
         }[env]
         self.ninjacats = {
             "dev": "",
